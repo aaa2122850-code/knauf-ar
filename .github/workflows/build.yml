@@ -1,0 +1,26 @@
+name: Build IPA
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Установка XcodeGen
+        run: brew install xcodegen
+      - name: Генерация проекта
+        run: xcodegen
+      - name: Сборка (без подписи)
+        run: |
+          xcodebuild -project KnaufAR.xcodeproj -scheme KnaufAR \
+            -configuration Release -sdk iphoneos \
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO
+      - name: Упаковка IPA
+        run: |
+          mkdir Payload
+          cp -r build/Build/Products/Release-iphoneos/KnaufAR.app Payload/
+          zip -qry KnaufAR.ipa Payload
+      - uses: actions/upload-artifact@v4
+        with:
+          name: KnaufAR-ipa
+          path: KnaufAR.ipa
