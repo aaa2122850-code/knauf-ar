@@ -1823,7 +1823,7 @@ extension ViewController: ARSCNViewDelegate {
         let plane = SCNPlane(width: CGFloat(pa.extent.x), height: CGFloat(pa.extent.z))
         let m = SCNMaterial()
         switch worldNormal(of: node).y {
-        case ..< -0.5: m.diffuse.contents = UIColor(white: 1, alpha: 0.10)
+        case ..<(-0.5): m.diffuse.contents = UIColor(white: 1, alpha: 0.10)
         case 0.5...:   m.diffuse.contents = UIColor(red: 0.99, green: 0.80, blue: 0.25, alpha: 0.14)
         default:       m.diffuse.contents = UIColor(red: 0.55, green: 0.72, blue: 0.90, alpha: 0.10)
         }
