@@ -1,0 +1,21 @@
+name: KnaufAR
+options:
+  bundleIdPrefix: ru.knaufar
+  deploymentTarget:
+    iOS: "15.0"
+targets:
+  KnaufAR:
+    type: application
+    platform: iOS
+    sources: [KnaufAR]
+    info:
+      path: KnaufAR/Info.plist
+      properties:
+        CFBundleDisplayName: КНАУФ AR
+        UILaunchScreen: {}
+        NSCameraUsageDescription: Камера используется для моделирования систем КНАУФ в интерьере
+        NSPhotoLibraryAddUsageDescription: Для сохранения снимков AR-сцены
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
