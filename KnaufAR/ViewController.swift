@@ -1,6 +1,6 @@
 //
 //  ViewController.swift
-//  КНАУФ AR Конструктор v3.0
+//  КНАУФ AR Конструктор v3.0 (build-fixed)
 //  AR-конструкции КНАУФ + сканирование помещений + 2D-планы + Rw/EI + каталог по Wi-Fi
 //
 
@@ -75,7 +75,16 @@ private func num(_ f: Float, _ d: Int = 2) -> String {
     String(format: "%.\(d)f", f).replacingOccurrences(of: ".", with: ",")
 }
 
-private struct SpecEntry { let item: String; let qty: Double; let unit: String }
+private struct SpecEntry {
+    let item: String
+    let qty: Double
+    let unit: String
+    init(_ item: String, _ qty: Double, _ unit: String) {
+        self.item = item
+        self.qty = qty
+        self.unit = unit
+    }
+}
 
 /// Запас на подрезку листовых материалов
 private let kSheetWaste = 0.10
@@ -430,7 +439,10 @@ class ViewController: UIViewController {
         let geo = SCNBox(width: width, height: height, length: length, chamferRadius: 0)
         let m = SCNMaterial()
         m.diffuse.contents = color
-        if color == Palette.metal { m.metalness = 0.5; m.roughness = 0.45 }
+        if color == Palette.metal {
+            m.metalness.contents = 0.5
+            m.roughness.contents = 0.45
+        }
         geo.materials = [m]
         return geo
     }
@@ -535,7 +547,7 @@ class ViewController: UIViewController {
         let root = SCNNode()
         root.name = c.sys.code
         root.position = c.a
-        root.eulerAngles.y = atan2(-Float(dz), Float(dx))
+        root.eulerAngles.y = atan2(-dz, dx)
 
         for side: Float in [-1, 1] {
             let z = side * (Float(t) - Float(sheetT)) / 2
@@ -608,8 +620,8 @@ class ViewController: UIViewController {
             simd_float4(mid.x, mid.y, mid.z, 1)
         )
 
-        addBox(root, L, 0.027, frameD, Palette.metal, at: v(0, 0.0135, frameD / 2), role: "frame")
-        addBox(root, L, 0.027, frameD, Palette.metal, at: v(0, H - 0.0135, frameD / 2), role: "frame")
+        addBox(root, L, 0.027, frameD, Palette.metal, at: v(0, 0.0135, Float(frameD) / 2), role: "frame")
+        addBox(root, L, 0.027, frameD, Palette.metal, at: v(0, Float(H) - 0.0135, Float(frameD) / 2), role: "frame")
         let count = max(2, Int((Double(L) / (c.sys.spacingMM / 1000)).rounded(.up)) + 1)
         for i in 0..<count {
             let x = Float(L) * Float(i) / Float(count - 1)
@@ -688,7 +700,10 @@ class ViewController: UIViewController {
                 let ln = sqrtf(dx * dx + dz * dz)
                 guard ln > 0.05 else { continue }
                 let g = SCNBox(width: CGFloat(ln), height: 0.027, length: 0.027, chamferRadius: 0)
-                let m = SCNMaterial(); m.diffuse.contents = Palette.metal; m.metalness = 0.5; m.roughness = 0.45
+                let m = SCNMaterial()
+                m.diffuse.contents = Palette.metal
+                m.metalness.contents = 0.5
+                m.roughness.contents = 0.45
                 g.materials = [m]
                 let wn = SCNNode(geometry: g)
                 wn.position = SCNVector3((a2.x + b2.x) / 2, yProf, (a2.z + b2.z) / 2)
@@ -1824,8 +1839,8 @@ extension ViewController: ARSCNViewDelegate {
         let m = SCNMaterial()
         switch worldNormal(of: node).y {
         case ..<(-0.5): m.diffuse.contents = UIColor(white: 1, alpha: 0.10)
-        case 0.5...:   m.diffuse.contents = UIColor(red: 0.99, green: 0.80, blue: 0.25, alpha: 0.14)
-        default:       m.diffuse.contents = UIColor(red: 0.55, green: 0.72, blue: 0.90, alpha: 0.10)
+        case 0.5...:    m.diffuse.contents = UIColor(red: 0.99, green: 0.80, blue: 0.25, alpha: 0.14)
+        default:        m.diffuse.contents = UIColor(red: 0.55, green: 0.72, blue: 0.90, alpha: 0.10)
         }
         m.isDoubleSided = true
         plane.materials = [m]
