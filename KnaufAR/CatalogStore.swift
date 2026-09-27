@@ -1,6 +1,6 @@
 //
 //  CatalogStore.swift
-//  КНАУФ AR — офлайн-каталог систем + обновление по Wi-Fi
+//  КНАУФ AR — офлайн-каталог систем + обновление по Wi-Fi (build-fixed)
 //
 
 import Foundation
@@ -31,23 +31,23 @@ final class CatalogStore {
 
     static let shared = CatalogStore()
 
-    private var fileURL: URL {
+    private static var fileURL: URL {
         FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("catalog.json")
     }
-    private let urlKey = "knauf.catalog.remoteURL"
+    private static let urlKey = "knauf.catalog.remoteURL"
 
     private(set) var catalog: CatalogJSON
 
     private init() {
-        if let data = try? Data(contentsOf: fileURL),
+        var loaded: CatalogJSON?
+        if let data = try? Data(contentsOf: CatalogStore.fileURL),
            let c = try? JSONDecoder().decode(CatalogJSON.self, from: data), !c.systems.isEmpty {
-            catalog = c
-        } else if let c = try? JSONDecoder().decode(CatalogJSON.self, from: Data(Self.embeddedJSON.utf8)) {
-            catalog = c
-        } else {
-            catalog = CatalogJSON(version: "0", updated: "-", source: "-", systems: [])
+            loaded = c
+        } else if let c = try? JSONDecoder().decode(CatalogJSON.self, from: Data(CatalogStore.embeddedJSON.utf8)) {
+            loaded = c
         }
+        catalog = loaded ?? CatalogJSON(version: "0", updated: "-", source: "-", systems: [])
     }
 
     var systems: [KnaufSystem] { catalog.systems.compactMap { KnaufSystem(json: $0) } }
@@ -58,15 +58,19 @@ final class CatalogStore {
 
     // MARK: Обновление по Wi-Fi
 
-    var remoteURL: String? { UserDefaults.standard.string(forKey: urlKey) }
+    var remoteURL: String? {
+        UserDefaults.standard.string(forKey: CatalogStore.urlKey)
+    }
 
-    func setRemoteURL(_ s: String?) { UserDefaults.standard.set(s, forKey: urlKey) }
+    func setRemoteURL(_ s: String?) {
+        UserDefaults.standard.set(s, forKey: CatalogStore.urlKey)
+    }
 
     func refresh(completion: @escaping (Result<String, Error>) -> Void) {
         guard let s = remoteURL?.trimmingCharacters(in: .whitespacesAndNewlines),
               !s.isEmpty, let url = URL(string: s) else {
             completion(.failure(CatalogError.message(
-                "Не задан адрес каталога. Пример:\nraw.githubusercontent.com/ВАШ_ЛОГИН/knauf-ar/main/catalog.json")))
+                "Не задан адрес каталога. Пример:\nraw.githubusercontent.com/ЛОГИН/knauf-ar/main/catalog.json")))
             return
         }
         URLSession.shared.dataTask(with: url) { data, _, error in
@@ -82,7 +86,7 @@ final class CatalogStore {
                 }
                 return
             }
-            try? data.write(to: self.fileURL)
+            try? data.write(to: CatalogStore.fileURL)
             DispatchQueue.main.async {
                 self.catalog = c
                 completion(.success("Каталог обновлён.\nВерсия \(c.version) · \(c.updated)\nСистем: \(c.systems.count)"))
